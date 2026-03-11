@@ -3,16 +3,23 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/cards", label: "Cards" },
-  { href: "/collections", label: "Collections" },
-  { href: "/cards/new", label: "Add Card" },
-];
+type TopNavProps = {
+  isSuperuser?: boolean;
+};
 
-export default function TopNav() {
+export default function TopNav({ isSuperuser = false }: TopNavProps) {
   const pathname = usePathname();
   const router = useRouter();
+
+  const navItems = [
+    { href: "/dashboard", label: "Dashboard" },
+    { href: "/cards", label: "Cards" },
+    { href: "/collections", label: "Collections" },
+    { href: "/cards/new", label: "Add Card" },
+    ...(isSuperuser
+      ? [{ href: "/dashboard/catalog", label: "Catalog" }]
+      : []),
+  ];
 
   async function handleLogout() {
     try {
@@ -31,14 +38,14 @@ export default function TopNav() {
         <Link href="/dashboard" className="brand">
           <div className="brand-mark">FC</div>
           <div className="brand-copy">
-            <span className="brand-title">Freak Collector V1</span>
-            <span className="brand-subtitle">Modern Collector App</span>
+            <div className="brand-title">Freak Collector V1</div>
+            <div className="brand-subtitle">Modern Collector App</div>
           </div>
         </Link>
 
         <div className="topbar-spacer" />
 
-        <nav className="topnav-links" aria-label="Primary">
+        <nav className="topnav-links">
           {navItems.map((item) => {
             const active =
               pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -47,7 +54,7 @@ export default function TopNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={active ? "nav-link nav-link-active" : "nav-link"}
+                className={`nav-link ${active ? "nav-link-active" : ""}`}
               >
                 {item.label}
               </Link>
