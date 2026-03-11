@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: card_app_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cardapp
+      POSTGRES_PASSWORD: cardapp
+      POSTGRES_DB: cardapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
