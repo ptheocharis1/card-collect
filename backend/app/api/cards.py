@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends
@@ -34,48 +34,45 @@ def list_cards(
     current_user: User = Depends(get_current_user),
 ):
     rows = db.execute(
-        text("""
+        text(
+            """
             SELECT
-                ci.id,
-                ci.user_id,
-                ci.condition_type,
-                ci.raw_condition_estimate,
-                ci.grader,
-                ci.grade,
-                ci.serial_number_observed,
-                ci.purchase_price,
-                ci.purchase_date,
-                ci.purchase_source,
-                ci.notes,
-                ci.created_at,
-
-                cc.id AS checklist_card_id,
-                cc.card_name,
-                cc.player_name,
-                cc.team_or_franchise,
-                cc.card_number,
-                cc.variant_name,
-                cc.rookie_card,
-
-                cv.id AS variant_id,
-                cv.parallel_name,
-                cv.variation_name,
-                cv.autograph_flag,
-                cv.autograph_type,
-                cv.relic_flag,
-                cv.patch_flag,
-                cv.relic_type,
-                cv.serial_total,
-
-                p.id AS product_id,
-                p.year,
-                p.manufacturer,
-                p.brand,
-                p.product_name,
-                p.sport_or_universe,
-                p.release_type,
-                p.release_date
-
+              ci.id,
+              ci.user_id,
+              ci.condition_type,
+              ci.raw_condition_estimate AS condition_estimate,
+              ci.grader,
+              ci.grade,
+              ci.serial_number_observed,
+              ci.purchase_price,
+              ci.purchase_date,
+              ci.purchase_source,
+              ci.notes,
+              ci.created_at,
+              cc.id AS checklist_card_id,
+              cc.card_name,
+              cc.player_name,
+              cc.team_or_franchise,
+              cc.card_number,
+              cc.variant_name,
+              cc.rookie_card,
+              cv.id AS variant_id,
+              cv.parallel_name,
+              cv.variation_name,
+              cv.autograph_flag,
+              cv.autograph_type,
+              cv.relic_flag,
+              cv.patch_flag,
+              cv.relic_type,
+              cv.serial_total,
+              p.id AS product_id,
+              p.year,
+              p.manufacturer,
+              p.brand,
+              p.product_name,
+              p.sport_or_universe,
+              p.release_type,
+              p.release_date
             FROM card_instances ci
             JOIN card_variants cv ON ci.card_variant_id = cv.id
             JOIN checklist_cards cc ON cv.checklist_card_id = cc.id
@@ -83,7 +80,8 @@ def list_cards(
             WHERE ci.user_id = :user_id
             ORDER BY ci.id DESC
             LIMIT 200
-        """),
+            """
+        ),
         {"user_id": current_user.id},
     ).mappings().all()
 
@@ -93,7 +91,7 @@ def list_cards(
             "user_id": row["user_id"],
             "condition": {
                 "type": row["condition_type"],
-                "estimate": row["raw_condition_estimate"],
+                "estimate": row["condition_estimate"],
                 "grader": row["grader"],
                 "grade": row["grade"],
                 "serial_number_observed": row["serial_number_observed"],
@@ -146,18 +144,24 @@ def create_card(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    parsed_purchase_date = None
+    if payload.purchase_date:
+      parsed_purchase_date = date.fromisoformat(payload.purchase_date)
+
     card = CardInstance(
         user_id=current_user.id,
         card_variant_id=payload.card_variant_id,
         condition_type=payload.condition_type,
-        raw_condition_estimate=payload.raw_condition_estimate,
+        condition_estimate=payload.raw_condition_estimate,
         grader=payload.grader,
         grade=payload.grade,
-        serial_number_observed=str(payload.serial_number_observed)
-        if payload.serial_number_observed is not None
-        else None,
+        serial_number_observed=(
+            str(payload.serial_number_observed)
+            if payload.serial_number_observed is not None
+            else None
+        ),
         purchase_price=payload.purchase_price,
-        purchase_date=payload.purchase_date,
+        purchase_date=parsed_purchase_date,
         purchase_source=payload.purchase_source,
         notes=payload.notes,
         created_at=datetime.now(timezone.utc),

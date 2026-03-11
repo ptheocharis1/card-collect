@@ -13,7 +13,7 @@ class CardInstance(Base):
     card_variant_id = Column(Integer, ForeignKey("card_variants.id"), nullable=False)
 
     condition_type = Column(String, nullable=True)
-    condition_estimate = Column(String, nullable=True)
+    condition_estimate = Column("raw_condition_estimate", String, nullable=True)
     grader = Column(String, nullable=True)
     grade = Column(String, nullable=True)
     serial_number_observed = Column(String, nullable=True)

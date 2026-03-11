@@ -19,4 +19,8 @@ class Collection(Base):
     )
 
     user = relationship("User", back_populates="collections")
-    items = relationship("CollectionItem", back_populates="collection", cascade="all, delete-orphan")
+    items = relationship(
+        "CollectionItem",
+        back_populates="collection",
+        cascade="all, delete-orphan",
+    )
