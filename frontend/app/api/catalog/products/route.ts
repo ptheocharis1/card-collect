@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { getAccessToken } from "@/lib/auth";
 
@@ -11,11 +11,34 @@ export async function GET() {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
 
-  const response = await fetch(`${API_BASE_URL}/auth/me`, {
+  const response = await fetch(`${API_BASE_URL}/catalog/products`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
     cache: "no-store",
+  });
+
+  const data = await response.json().catch(() => null);
+
+  return NextResponse.json(data, { status: response.status });
+}
+
+export async function POST(request: NextRequest) {
+  const token = await getAccessToken();
+
+  if (!token) {
+    return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await request.text();
+
+  const response = await fetch(`${API_BASE_URL}/catalog/products`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body,
   });
 
   const data = await response.json().catch(() => null);
